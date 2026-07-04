@@ -12,7 +12,7 @@ It is the space between *wanting something* and *finding exactly the right one*.
 
 ## v0.0.1 — Quickstart
 
-meShop v1 is a Next.js app (frontend + API) backed by a Python agent service
+meShop v0.0.1 is a Next.js app (frontend + API) backed by a Python agent service
 (FastAPI + LangGraph) for the AI chat companion. State lives in a single
 file-based SQLite database shared by both.
 
