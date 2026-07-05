@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root,
+[data-theme='light'] {
+  --color-bg: #FAFAF8;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F5F5F0;
+  --color-border: #E8E6E1;
+  --color-text-primary: #1A1A18;
+  --color-text-secondary: #6B6B63;
+  --color-text-tertiary: #9C9C93;
+  --color-accent: #2C5F2D;
+  --color-accent-hover: #1E4620;
+  --color-accent-light: #E8F0E8;
+  --color-danger: #C53030;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --color-bg: #141413;
+  --color-surface: #1E1E1C;
+  --color-surface-hover: #2A2A27;
+  --color-border: #3A3A36;
+  --color-text-primary: #EAEAE6;
+  --color-text-secondary: #9C9C93;
+  --color-text-tertiary: #6B6B63;
+  --color-accent: #5A9B5C;
+  --color-accent-hover: #6FB871;
+  --color-accent-light: #1E2E1E;
+  --color-danger: #E05252;
+  color-scheme: dark;
+}
+
+/* System preference (only when the user hasn't chosen an explicit theme) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #141413;
+    --color-surface: #1E1E1C;
+    --color-surface-hover: #2A2A27;
+    --color-border: #3A3A36;
+    --color-text-primary: #EAEAE6;
+    --color-text-secondary: #9C9C93;
+    --color-text-tertiary: #6B6B63;
+    --color-accent: #5A9B5C;
+    --color-accent-hover: #6FB871;
+    --color-accent-light: #1E2E1E;
+    --color-danger: #E05252;
+    color-scheme: dark;
+  }
+}
+
+@layer base {
+  html,
+  body {
+    height: 100%;
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-text-primary);
+    font-family: system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer utilities {
+  .animate-dot {
+    animation: dot-bounce 1.2s infinite ease-in-out;
+  }
+
+  @keyframes dot-bounce {
+    0%,
+    80%,
+    100% {
+      opacity: 0.3;
+      transform: translateY(0);
+    }
+    40% {
+      opacity: 1;
+      transform: translateY(-3px);
+    }
+  }
+}
+
+/* Thin, restrained scrollbars to match the warm aesthetic */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
