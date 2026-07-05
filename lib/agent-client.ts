@@ -60,5 +60,21 @@ export async function agentHealth(userId?: string): Promise<Response> {
   return fetch(url, { method: 'GET' });
 }
 
+export interface ExtractRequest {
+  url: string;
+  scenario_id: string;
+  scenario_fields: unknown[];
+  user_id?: string;
+}
+
+/** Proxy a URL-extraction request to the Python agent service. */
+export async function extractProduct(body: ExtractRequest): Promise<Response> {
+  return fetch(`${AGENT_SERVICE_URL}/extract`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+}
+
 export { AGENT_SERVICE_URL };
 export type { ChatMessage };

@@ -30,7 +30,7 @@ def _env_config() -> LLMConfig:
         provider=os.getenv("LLM_PROVIDER", "ollama"),
         base_url=os.getenv("LLM_BASE_URL", "http://localhost:11434/v1"),
         api_key=os.getenv("LLM_API_KEY") or None,
-        model=os.getenv("LLM_MODEL", "llama3.2"),
+        model=os.getenv("LLM_MODEL", "gemma3:4b"),
     )
 
 

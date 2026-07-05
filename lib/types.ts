@@ -22,7 +22,11 @@ export interface JWTPayload {
 }
 
 // Scenarios
-export type ScenarioId = 'books' | 'recipes' | 'sneakers-streetwear';
+export type ScenarioId =
+  | 'general'
+  | 'books'
+  | 'recipes'
+  | 'sneakers-streetwear';
 
 export interface ScenarioField {
   key: string;

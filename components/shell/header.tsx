@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { ChevronLeft } from 'lucide-react';
 
 export interface HeaderProps {
-  title: string;
+  title: React.ReactNode;
   subtitle?: React.ReactNode;
   /** Optional back link (e.g. back to Home from a project). */
   backHref?: string;

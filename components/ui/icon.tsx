@@ -9,6 +9,8 @@ import {
   TrendingUp,
   UtensilsCrossed,
   HelpCircle,
+  ShoppingBag,
+  Plus,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -24,6 +26,8 @@ const registry: Record<string, LucideIcon> = {
   TrendingUp,
   UtensilsCrossed,
   HelpCircle,
+  ShoppingBag,
+  Plus,
 };
 
 export interface IconProps {

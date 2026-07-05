@@ -18,7 +18,68 @@ import { cn } from '@/lib/utils';
 import type { Recipe, RecipeIngredient } from '@/lib/types';
 import type { ToolProps } from './tool-registry';
 
+/**
+ * The Recipe Builder doubles as a generic "List Builder" in the General
+ * Shopping scenario — same data model, different vocabulary. Labels are chosen
+ * by scenario so a single component serves both contexts.
+ */
+interface BuilderLabels {
+  toolName: string;
+  addButton: string;
+  addTitle: string;
+  nameField: string;
+  namePlaceholder: string;
+  itemsField: string;
+  itemField: string;
+  foundField: string;
+  noun: string; // singular, e.g. "recipe" / "list"
+  nounPlural: string;
+  itemNoun: string; // singular, e.g. "ingredient" / "item"
+  itemNounPlural: string;
+  emptyTitle: string;
+  emptyDescription: string;
+}
+
+const GENERAL_LABELS: BuilderLabels = {
+  toolName: 'List Builder',
+  addButton: 'Add List',
+  addTitle: 'Add list',
+  nameField: 'List Name',
+  namePlaceholder: 'e.g. Cable Management Kit',
+  itemsField: 'Items',
+  itemField: 'Item',
+  foundField: 'Sourced',
+  noun: 'list',
+  nounPlural: 'lists',
+  itemNoun: 'item',
+  itemNounPlural: 'items',
+  emptyTitle: 'No lists yet',
+  emptyDescription: 'Build a list and check off items as you source them.',
+};
+
+const RECIPE_LABELS: BuilderLabels = {
+  toolName: 'Recipe Builder',
+  addButton: 'Add Recipe',
+  addTitle: 'Add recipe',
+  nameField: 'Recipe Name',
+  namePlaceholder: 'e.g. Cacio e Pepe',
+  itemsField: 'Ingredients',
+  itemField: 'Ingredient',
+  foundField: 'Found',
+  noun: 'recipe',
+  nounPlural: 'recipes',
+  itemNoun: 'ingredient',
+  itemNounPlural: 'ingredients',
+  emptyTitle: 'No recipes yet',
+  emptyDescription: "Add a recipe and track which ingredients you've sourced.",
+};
+
+function getLabels(scenarioId: string): BuilderLabels {
+  return scenarioId === 'general' ? GENERAL_LABELS : RECIPE_LABELS;
+}
+
 export function RecipeBuilder({ project }: ToolProps) {
+  const labels = getLabels(project.scenarioId);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -55,7 +116,7 @@ export function RecipeBuilder({ project }: ToolProps) {
   };
 
   const deleteRecipe = async (id: string) => {
-    if (!confirm('Delete this recipe?')) return;
+    if (!confirm(`Delete this ${labels.noun}?`)) return;
     await fetch(`/api/recipes/${id}`, { method: 'DELETE' });
     setSelectedId(null);
     await load();
@@ -71,6 +132,7 @@ export function RecipeBuilder({ project }: ToolProps) {
     return (
       <RecipeDetail
         recipe={selected}
+        labels={labels}
         onBack={() => setSelectedId(null)}
         onToggle={(i) => toggleIngredient(selected, i)}
         onDelete={() => deleteRecipe(selected.id)}
@@ -83,27 +145,28 @@ export function RecipeBuilder({ project }: ToolProps) {
       <div className="mb-5 flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold text-text-primary">
-            Recipe Builder
+            {labels.toolName}
           </h2>
           <p className="text-sm text-text-secondary">
-            {recipes.length} {recipes.length === 1 ? 'recipe' : 'recipes'}.
+            {recipes.length}{' '}
+            {recipes.length === 1 ? labels.noun : labels.nounPlural}.
           </p>
         </div>
         <Button onClick={() => setFormOpen(true)}>
           <Plus className="h-4 w-4" />
-          Add Recipe
+          {labels.addButton}
         </Button>
       </div>
 
       {recipes.length === 0 ? (
         <EmptyState
           icon={UtensilsCrossed}
-          title="No recipes yet"
-          description="Add a recipe and track which ingredients you've sourced."
+          title={labels.emptyTitle}
+          description={labels.emptyDescription}
           action={
             <Button onClick={() => setFormOpen(true)}>
               <Plus className="h-4 w-4" />
-              Add Recipe
+              {labels.addButton}
             </Button>
           }
         />
@@ -128,7 +191,9 @@ export function RecipeBuilder({ project }: ToolProps) {
                 <div className="shrink-0 text-right text-xs text-text-tertiary">
                   <div>
                     {r.ingredients.length}{' '}
-                    {r.ingredients.length === 1 ? 'ingredient' : 'ingredients'}
+                    {r.ingredients.length === 1
+                      ? labels.itemNoun
+                      : labels.itemNounPlural}
                   </div>
                   <div className="text-accent">
                     {found}/{r.ingredients.length} sourced
@@ -143,11 +208,12 @@ export function RecipeBuilder({ project }: ToolProps) {
       <Dialog
         open={formOpen}
         onClose={() => setFormOpen(false)}
-        title="Add recipe"
+        title={labels.addTitle}
         variant="slideover"
       >
         <RecipeForm
           projectId={project.id}
+          labels={labels}
           onCancel={() => setFormOpen(false)}
           onCreated={async () => {
             setFormOpen(false);
@@ -161,11 +227,13 @@ export function RecipeBuilder({ project }: ToolProps) {
 
 function RecipeDetail({
   recipe,
+  labels,
   onBack,
   onToggle,
   onDelete,
 }: {
   recipe: Recipe;
+  labels: BuilderLabels;
   onBack: () => void;
   onToggle: (index: number) => void;
   onDelete: () => void;
@@ -177,7 +245,7 @@ function RecipeDetail({
       <div className="mb-4 flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={onBack}>
           <ChevronLeft className="h-4 w-4" />
-          Back to recipes
+          Back to {labels.nounPlural}
         </Button>
         <Button variant="danger" size="sm" onClick={onDelete}>
           <Trash2 className="h-3.5 w-3.5" />
@@ -217,7 +285,7 @@ function RecipeDetail({
       <div className="mt-6 rounded-xl border border-border bg-surface p-5 shadow-sm">
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-lg font-semibold text-text-primary">
-            Ingredients
+            {labels.itemsField}
           </h3>
           <span className="text-xs text-accent">
             {found}/{recipe.ingredients.length} sourced
@@ -303,10 +371,12 @@ function emptyIngredient(): RecipeIngredient {
 
 function RecipeForm({
   projectId,
+  labels,
   onCancel,
   onCreated,
 }: {
   projectId: string;
+  labels: BuilderLabels;
   onCancel: () => void;
   onCreated: () => void;
 }) {
@@ -362,13 +432,13 @@ function RecipeForm({
     <div className="space-y-4">
       <div>
         <label className="mb-1.5 block text-sm font-medium text-text-primary">
-          Name
+          {labels.nameField}
         </label>
         <Input
           autoFocus
           value={name}
           onChange={(e) => setName(e.target.value)}
-          placeholder="e.g. Cacio e Pepe"
+          placeholder={labels.namePlaceholder}
         />
       </div>
 
@@ -411,7 +481,7 @@ function RecipeForm({
       <div className="border-t border-border pt-4">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-medium text-text-primary">
-            Ingredients
+            {labels.itemsField}
           </span>
           <Button variant="ghost" size="sm" onClick={addIng}>
             <Plus className="h-3.5 w-3.5" />
@@ -424,7 +494,7 @@ function RecipeForm({
               <Input
                 value={ing.name}
                 onChange={(e) => updateIng(i, { name: e.target.value })}
-                placeholder="Ingredient"
+                placeholder={labels.itemField}
                 className="flex-1"
               />
               <Input
@@ -481,7 +551,7 @@ function RecipeForm({
           Cancel
         </Button>
         <Button onClick={submit} disabled={!name.trim() || submitting}>
-          {submitting ? 'Saving…' : 'Add recipe'}
+          {submitting ? 'Saving…' : labels.addButton}
         </Button>
       </div>
     </div>

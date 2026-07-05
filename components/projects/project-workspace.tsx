@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Header } from '@/components/shell/header';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { ToolSidebar } from '@/components/tools/tool-sidebar';
 import { getToolMeta } from '@/components/tools/tool-registry';
@@ -10,6 +11,7 @@ import { PlaceholderTool } from '@/components/tools/placeholder-tool';
 import { RubberDuck } from '@/components/tools/rubber-duck';
 import { ReverseCatalog } from '@/components/tools/reverse-catalog';
 import { RecipeBuilder } from '@/components/tools/recipe-builder';
+import { EditableProjectTitle } from './editable-project-title';
 import { getScenario } from '@/lib/scenarios';
 import { formatDate } from '@/lib/utils';
 import type { Project } from '@/lib/types';
@@ -31,8 +33,13 @@ export function ProjectWorkspace({
   const activeMeta = activeToolId ? getToolMeta(activeToolId) : null;
   const color = scenario?.color ?? '#6B6B63';
 
+  const isGeneral = scenario?.id === 'general';
+
   const renderTool = () => {
-    if (!activeToolId || !activeMeta) return <Overview />;
+    if (!activeToolId || !activeMeta) {
+      if (isGeneral && productCount === 0) return <GeneralEmptyState />;
+      return <Overview />;
+    }
     if (!activeMeta.functional)
       return <PlaceholderTool meta={activeMeta} />;
 
@@ -74,7 +81,7 @@ export function ProjectWorkspace({
           <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Stat label="Catalog items" value={productCount} />
             {scenario?.tools.includes('recipe-builder') && (
-              <Stat label="Recipes" value={recipeCount} />
+              <Stat label={isGeneral ? 'Lists' : 'Recipes'} value={recipeCount} />
             )}
             <Stat label="Tools" value={scenario?.tools.length ?? 0} />
           </div>
@@ -124,10 +131,71 @@ export function ProjectWorkspace({
     );
   }
 
+  function GeneralEmptyState() {
+    const ideas = [
+      'Track vintage camera lenses across eBay and local shops',
+      'Build a home office piece by piece',
+      'Plan a camping trip and source gear',
+      'Hunt for vinyl records at fair prices',
+      'Assemble a PC build with compatible parts',
+    ];
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-10 sm:px-8 sm:py-16">
+        <div className="rounded-2xl border border-border bg-surface p-8 shadow-sm sm:p-10">
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-xl"
+            style={{ backgroundColor: `${color}1A`, color }}
+          >
+            <Icon name={scenario?.icon ?? 'ShoppingBag'} className="h-6 w-6" />
+          </div>
+          <h2 className="mt-5 text-2xl font-semibold text-text-primary">
+            What are you looking for?
+          </h2>
+          <p className="mt-2 text-sm text-text-secondary">
+            This is your space. Some ideas:
+          </p>
+          <ul className="mt-4 space-y-2">
+            {ideas.map((idea) => (
+              <li
+                key={idea}
+                className="flex items-start gap-2.5 text-sm text-text-primary"
+              >
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                {idea}
+              </li>
+            ))}
+          </ul>
+          <p className="mt-6 text-sm text-text-secondary">
+            Start by adding a product to your catalog, or open the Rubber Duck to
+            think it through.
+          </p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <Button onClick={() => setActiveToolId('reverse-catalog')}>
+              <Icon name="Plus" className="h-4 w-4" />
+              Add Product
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setActiveToolId('rubber-duck')}
+            >
+              <Icon name="MessageCircle" className="h-4 w-4" />
+              Open Rubber Duck
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
       <Header
-        title={project.name}
+        title={
+          <EditableProjectTitle
+            projectId={project.id}
+            initialName={project.name}
+          />
+        }
         backHref="/"
         subtitle={
           scenario && (

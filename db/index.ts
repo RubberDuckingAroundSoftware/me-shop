@@ -34,7 +34,25 @@ function initDb(): Database.Database {
   if (fs.existsSync(schemaPath)) {
     db.exec(fs.readFileSync(schemaPath, 'utf8'));
   }
+  runMigrations(db);
   return db;
+}
+
+/**
+ * Lightweight additive migrations for existing databases.
+ * `CREATE TABLE IF NOT EXISTS` won't add columns to a pre-existing table, so
+ * new columns are added here idempotently — no reseed required.
+ */
+function runMigrations(db: Database.Database): void {
+  const columns = db
+    .prepare(`PRAGMA table_info(projects)`)
+    .all() as { name: string }[];
+  const hasSortOrder = columns.some((c) => c.name === 'sort_order');
+  if (!hasSortOrder) {
+    db.exec(
+      `ALTER TABLE projects ADD COLUMN sort_order INTEGER NOT NULL DEFAULT 0`
+    );
+  }
 }
 
 export function getDb(): Database.Database {

@@ -54,9 +54,15 @@ def clean_html_for_llm(html: str) -> str:
         "share",
     ]
     for el in soup.find_all(True):
-        el_class = " ".join(el.get("class", []))
-        el_id = el.get("id", "")
-        combined = f"{el_class} {el_id}".lower()
+        # An earlier decompose() of a parent detaches its descendants (which are
+        # still in this list); those have attrs == None. Skip them.
+        if el.attrs is None:
+            continue
+        el_class = el.get("class") or []
+        if isinstance(el_class, str):
+            el_class = [el_class]
+        el_id = el.get("id") or ""
+        combined = f"{' '.join(el_class)} {el_id}".lower()
         if any(pattern in combined for pattern in noise_patterns):
             el.decompose()
 

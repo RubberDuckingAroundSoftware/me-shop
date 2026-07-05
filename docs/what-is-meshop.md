@@ -145,7 +145,7 @@ LLM Provider
 **Onboarding gradient:**
 
 1. **No LLM** — Install meShop, use the reverse catalog, recipe builder, manual tracking. Everything works.
-2. **Ollama** — Install Ollama, run `ollama pull llama3.2`. The rubber duck lights up. Conversations, preference learning, and smart suggestions come alive — all free, all local, all private.
+2. **Ollama** — Install Ollama, run `ollama pull gemma3:4b`. The rubber duck lights up. Conversations, preference learning, and smart suggestions come alive — all free, all local, all private.
 3. **Cloud provider** — Add an API key and set the model string. Access Claude, Mistral, GPT-4, or any provider supported by litellm for heavier reasoning tasks.
 
 Each step adds capability without taking anything away. The AI enhances every tool but is never a gate.
@@ -155,7 +155,7 @@ interface LLMConfig {
   provider: 'ollama' | 'cloud' | 'none';
   baseURL: string;            // default: "http://localhost:11434/v1"
   apiKey?: string;             // not needed for Ollama
-  model: string;               // default: "llama3.2" (litellm format: "ollama/llama3.2", "anthropic/claude-3-haiku", etc.)
+  model: string;               // default: "gemma3:4b" (litellm format: "ollama/gemma3:4b", "anthropic/claude-3-haiku", etc.)
   options?: {
     temperature?: number;
     maxTokens?: number;

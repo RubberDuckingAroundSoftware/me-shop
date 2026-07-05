@@ -6,15 +6,17 @@ import {
   ChevronRight,
   ExternalLink,
   Library,
+  Link2,
   Pencil,
   Plus,
   Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/ui/badge';
-import { Dialog } from '@/components/ui/dialog';
+import { ResizableDrawer } from '@/components/ui/resizable-drawer';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ProductForm } from './product-form';
+import { ImportUrlDialog } from './import-url-dialog';
 import { getScenario } from '@/lib/scenarios';
 import { cn, formatPrice } from '@/lib/utils';
 import type { Product } from '@/lib/types';
@@ -27,6 +29,7 @@ export function ReverseCatalog({ project }: ToolProps) {
   const [expanded, setExpanded] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -89,10 +92,16 @@ export function ReverseCatalog({ project }: ToolProps) {
             tracking.
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          Add Product
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={() => setImportOpen(true)}>
+            <Link2 className="h-4 w-4" />
+            Import from URL
+          </Button>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            Add Product
+          </Button>
+        </div>
       </div>
 
       {loading ? (
@@ -103,10 +112,16 @@ export function ReverseCatalog({ project }: ToolProps) {
           title="Your catalog is empty"
           description="Add the first thing you're hunting for — track where to find it and how much it costs."
           action={
-            <Button onClick={openCreate}>
-              <Plus className="h-4 w-4" />
-              Add Product
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button variant="secondary" onClick={() => setImportOpen(true)}>
+                <Link2 className="h-4 w-4" />
+                Import from URL
+              </Button>
+              <Button onClick={openCreate}>
+                <Plus className="h-4 w-4" />
+                Add Product
+              </Button>
+            </div>
           }
         />
       ) : (
@@ -127,11 +142,11 @@ export function ReverseCatalog({ project }: ToolProps) {
         </div>
       )}
 
-      <Dialog
+      <ResizableDrawer
         open={formOpen}
         onClose={() => setFormOpen(false)}
         title={editing ? 'Edit product' : 'Add product'}
-        variant="slideover"
+        storageKey="meshop_drawer_width"
       >
         {scenario && (
           <ProductForm
@@ -141,7 +156,17 @@ export function ReverseCatalog({ project }: ToolProps) {
             onCancel={() => setFormOpen(false)}
           />
         )}
-      </Dialog>
+      </ResizableDrawer>
+
+      {scenario && (
+        <ImportUrlDialog
+          open={importOpen}
+          onClose={() => setImportOpen(false)}
+          projectId={project.id}
+          scenarioId={scenario.id}
+          onProductCreated={load}
+        />
+      )}
     </div>
   );
 }

@@ -2,7 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
+:root,
+[data-theme='light'] {
   --color-bg: #FAFAF8;
   --color-surface: #FFFFFF;
   --color-surface-hover: #F5F5F0;
@@ -14,6 +15,40 @@
   --color-accent-hover: #1E4620;
   --color-accent-light: #E8F0E8;
   --color-danger: #C53030;
+  color-scheme: light;
+}
+
+[data-theme='dark'] {
+  --color-bg: #141413;
+  --color-surface: #1E1E1C;
+  --color-surface-hover: #2A2A27;
+  --color-border: #3A3A36;
+  --color-text-primary: #EAEAE6;
+  --color-text-secondary: #9C9C93;
+  --color-text-tertiary: #6B6B63;
+  --color-accent: #5A9B5C;
+  --color-accent-hover: #6FB871;
+  --color-accent-light: #1E2E1E;
+  --color-danger: #E05252;
+  color-scheme: dark;
+}
+
+/* System preference (only when the user hasn't chosen an explicit theme) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    --color-bg: #141413;
+    --color-surface: #1E1E1C;
+    --color-surface-hover: #2A2A27;
+    --color-border: #3A3A36;
+    --color-text-primary: #EAEAE6;
+    --color-text-secondary: #9C9C93;
+    --color-text-tertiary: #6B6B63;
+    --color-accent: #5A9B5C;
+    --color-accent-hover: #6FB871;
+    --color-accent-light: #1E2E1E;
+    --color-danger: #E05252;
+    color-scheme: dark;
+  }
 }
 
 @layer base {

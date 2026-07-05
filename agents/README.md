@@ -49,14 +49,14 @@ the Settings page) and falls back to `../.env.local`:
 LLM_PROVIDER=ollama          # ollama | cloud | none
 LLM_BASE_URL=http://localhost:11434/v1
 LLM_API_KEY=ollama
-LLM_MODEL=llama3.2
+LLM_MODEL=gemma3:4b
 ```
 
 ### Using Ollama (default)
 
 ```bash
 ollama serve
-ollama pull llama3.2
+ollama pull gemma3:4b
 ```
 
 ### Using a cloud provider

@@ -20,7 +20,7 @@ file-based SQLite database shared by both.
 
 - Node.js 20+ and pnpm
 - Python 3.11+ (for the agent service)
-- Optional: [Ollama](https://ollama.com) for local LLM chat (`ollama serve && ollama pull llama3.2`)
+- Optional: [Ollama](https://ollama.com) for local LLM chat (`ollama serve && ollama pull gemma3:4b`)
 
 ### Install & run
 

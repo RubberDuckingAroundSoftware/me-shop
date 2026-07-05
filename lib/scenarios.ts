@@ -1,6 +1,43 @@
 import { Scenario, ScenarioId } from './types';
 
 export const scenarios: Record<string, Scenario> = {
+  general: {
+    id: 'general',
+    name: 'General Shopping',
+    description:
+      'Track anything. A flexible workspace with every tool available — for any shopping pursuit that matters to you.',
+    icon: 'ShoppingBag',
+    color: '#7C3AED', // purple — distinct from the other three
+    tools: [
+      'rubber-duck',
+      'reverse-catalog',
+      'recipe-builder',
+      '3d-visualizer',
+      'website-watcher',
+      'price-watcher',
+    ],
+    productSchema: [
+      { key: 'category', label: 'Category', type: 'text' },
+      { key: 'brand', label: 'Brand', type: 'text' },
+      { key: 'model', label: 'Model / Variant', type: 'text' },
+      {
+        key: 'condition',
+        label: 'Condition',
+        type: 'select',
+        options: ['Any', 'New', 'Like New', 'Good', 'Fair', 'For Parts'],
+      },
+      { key: 'size', label: 'Size / Dimensions', type: 'text' },
+      { key: 'tags', label: 'Tags', type: 'tags' },
+      { key: 'max_price', label: 'Max Price', type: 'currency' },
+      {
+        key: 'priority',
+        label: 'Priority',
+        type: 'select',
+        options: ['Must Have', 'Nice to Have', 'Someday'],
+      },
+      { key: 'notes', label: 'Notes', type: 'textarea' },
+    ],
+  },
   books: {
     id: 'books',
     name: 'Books',

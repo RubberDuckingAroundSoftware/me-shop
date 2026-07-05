@@ -76,6 +76,13 @@ const projects = [
     createdAt: '2026-06-15T12:00:00Z',
     updatedAt: '2026-07-01T16:45:00Z',
   },
+  {
+    id: 'proj_home_office',
+    name: 'Home Office Setup',
+    scenarioId: 'general',
+    createdAt: '2026-06-20T09:00:00Z',
+    updatedAt: '2026-07-03T11:20:00Z',
+  },
 ];
 
 const products = [
@@ -231,6 +238,121 @@ const products = [
     ],
     status: 'bought',
   },
+  {
+    id: 'prod_monitor',
+    projectId: 'proj_home_office',
+    name: 'LG 27UK850-W 27" 4K Monitor',
+    description:
+      '4K IPS panel with USB-C. Good color accuracy for the price. Hunting for a refurbished unit.',
+    metadata: {
+      category: 'Monitor',
+      brand: 'LG',
+      model: '27UK850-W',
+      condition: 'Like New',
+      size: '27 inch',
+      tags: '4K,USB-C,IPS,refurbished',
+      max_price: '280',
+      priority: 'Must Have',
+      notes:
+        'Check manufacturer refurb store. Also look at the 27UL850 (newer revision, same panel).',
+    },
+    sources: [
+      {
+        url: 'https://www.lg.com',
+        storeName: 'LG Refurb Store',
+        price: 299,
+        currency: 'USD',
+        notes: 'Refurbished units appear sporadically',
+      },
+      {
+        url: 'https://www.backmarket.com',
+        storeName: 'Back Market',
+        price: 265,
+        currency: 'USD',
+        notes: 'Grade A available',
+      },
+    ],
+    status: 'hunting',
+  },
+  {
+    id: 'prod_chair',
+    projectId: 'proj_home_office',
+    name: 'Herman Miller Aeron — Size B',
+    description: 'The classic. Looking for a used one from an office liquidator.',
+    metadata: {
+      category: 'Chair',
+      brand: 'Herman Miller',
+      model: 'Aeron Remastered',
+      condition: 'Good',
+      size: 'B (Medium)',
+      tags: 'ergonomic,mesh,office',
+      max_price: '600',
+      priority: 'Must Have',
+      notes:
+        'Office liquidators in Bucharest sometimes have these from multinational office closures. Also check OLX.',
+    },
+    sources: [
+      {
+        url: 'https://www.olx.ro',
+        storeName: 'OLX Romania',
+        notes: "Search weekly for 'Herman Miller' or 'Aeron'",
+      },
+    ],
+    status: 'hunting',
+  },
+  {
+    id: 'prod_keyboard',
+    projectId: 'proj_home_office',
+    name: 'Keychron Q1 Pro — Gateron Brown',
+    description: 'Wireless, hot-swappable, aluminum. Endgame territory.',
+    metadata: {
+      category: 'Keyboard',
+      brand: 'Keychron',
+      model: 'Q1 Pro',
+      condition: 'New',
+      size: '75%',
+      tags: 'mechanical,wireless,hot-swap,aluminum',
+      max_price: '200',
+      priority: 'Nice to Have',
+      notes:
+        'Not urgent. Current keyboard works fine. Wait for a holiday sale.',
+    },
+    sources: [
+      {
+        url: 'https://www.keychron.com',
+        storeName: 'Keychron',
+        price: 199,
+        currency: 'USD',
+      },
+    ],
+    status: 'found',
+  },
+  {
+    id: 'prod_deskmat',
+    projectId: 'proj_home_office',
+    name: 'Grovemade Wool Felt Desk Pad',
+    description: 'Large, dark grey. Ties the desk together.',
+    metadata: {
+      category: 'Desk Accessory',
+      brand: 'Grovemade',
+      model: 'Wool Felt Desk Pad',
+      condition: 'New',
+      size: 'Large (36" x 17")',
+      tags: 'desk,wool,minimal',
+      max_price: '120',
+      priority: 'Someday',
+      notes: 'Pure aesthetics purchase. Last on the list.',
+    },
+    sources: [
+      {
+        url: 'https://grovemade.com',
+        storeName: 'Grovemade',
+        price: 120,
+        currency: 'USD',
+      },
+    ],
+    status: 'hunting',
+  },
 ];
 
 const recipes = [
@@ -341,6 +463,55 @@ const recipes = [
     notes:
       'Tiramisu improves over 24 hours as the flavors meld. Make it the day before if you can.',
   },
+  {
+    id: 'list_cable_mgmt',
+    projectId: 'proj_home_office',
+    name: 'Cable Management Kit',
+    description: 'Everything needed to clean up the desk cable situation.',
+    servings: null,
+    prepTime: null,
+    cookTime: null,
+    ingredients: [
+      { name: 'Cable tray (under-desk mount)', quantity: '1', found: false },
+      {
+        name: 'Velcro cable ties (pack of 50)',
+        quantity: '1',
+        found: true,
+        sourceStore: 'Amazon',
+      },
+      {
+        name: 'USB-C hub (7-port, powered)',
+        quantity: '1',
+        notes:
+          'Must have at least 2x USB-A, 1x HDMI, 1x SD card reader',
+        found: false,
+      },
+      { name: 'Cable sleeve (2m, black)', quantity: '2', found: false },
+      {
+        name: 'Power strip (6 outlets, surge protected)',
+        quantity: '1',
+        found: true,
+        sourceStore: 'Local electronics store',
+      },
+      {
+        name: 'Desk grommet (60mm, black)',
+        quantity: '1',
+        notes: 'For routing cables through the desk surface',
+        found: false,
+      },
+    ],
+    instructions: [
+      'Mount the cable tray under the desk surface using the included screws.',
+      'Route all power cables into the cable tray. Use velcro ties to bundle them.',
+      'Install the desk grommet — drill a 60mm hole in the back-right corner of the desk.',
+      'Run the USB-C hub cable and monitor cable through the grommet.',
+      'Wrap exposed cable runs in the cable sleeve.',
+      'Connect everything to the power strip inside the cable tray.',
+      'Use remaining velcro ties to secure any loose cables to the desk legs.',
+    ],
+    notes:
+      "Measure the desk underside before buying the cable tray — some designs don't fit with certain desk frames.",
+  },
 ];
 
 const conversations = [
@@ -401,6 +572,30 @@ const conversations = [
         content:
           "With those two anchors you've got a nice contrast — the Patta AM1s are a statement piece (that monarch orange is loud in the best way), and the NB 550s are your clean everyday option. For pants that work with both: olive cargo pants (straight leg, not baggy), charcoal wool trousers for a high-low contrast, and a classic pair of straight-leg raw denim. For layers: a black hoodie is the workhorse (you've already got the Stüssy one), add a fleece vest in cream or oatmeal for the AM1 days, and a simple navy chore jacket that bridges both sneakers. The key is keeping the rest neutral so the AM1s pop and the 550s blend.",
         timestamp: '2026-07-01T16:01:00Z',
+      },
+    ],
+  },
+  {
+    id: 'conv_office_1',
+    projectId: 'proj_home_office',
+    messages: [
+      {
+        role: 'user',
+        content:
+          "I found an Aeron on OLX for 450 EUR but it's the older model, not the remastered. The seller says it's from 2015. Is it worth it?",
+        timestamp: '2026-07-02T14:00:00Z',
+      },
+      {
+        role: 'assistant',
+        content:
+          'A 2015 Aeron is the pre-remastered ("Classic") version. Still an excellent chair — the core ergonomics are the same. Main differences from the Remastered: the Classic has a slightly different tilt mechanism, the armpad adjustment is less granular, and the mesh material is the older Pellicle (still great, just different texture). At 450 EUR for a ~11 year old unit, here\'s what to check: does the mesh have any sag or deformation? Are the armpad surfaces intact (they crack with age)? Does the tilt lock work in all positions? Does the pneumatic cylinder hold height overnight? If it passes those checks, 450 EUR is reasonable for Romania. You could try offering 380-400 EUR — sellers on OLX expect negotiation.',
+        timestamp: '2026-07-02T14:01:00Z',
+      },
+      {
+        role: 'user',
+        content:
+          "Good call on the cylinder test. I'll ask the seller if I can sit in it for 10 minutes before deciding. Adding it to my sources.",
+        timestamp: '2026-07-02T14:10:00Z',
       },
     ],
   },
@@ -481,7 +676,7 @@ db.prepare(
   provider: process.env.LLM_PROVIDER || 'ollama',
   baseUrl: process.env.LLM_BASE_URL || 'http://localhost:11434/v1',
   apiKey: process.env.LLM_API_KEY || 'ollama',
-  model: process.env.LLM_MODEL || 'llama3.2',
+  model: process.env.LLM_MODEL || 'gemma3:4b',
 });
 
 console.log(

@@ -38,6 +38,19 @@ SCENARIO_FIELD_MAP = {
         "image": "_product_image",
         "sku": "model",
     },
+    # General Shopping: intentionally broad — capture whatever structured data
+    # or the LLM provides and map it onto the flexible general schema.
+    "general": {
+        "brand": "brand",
+        "name": "_product_name",
+        "description": "_product_description",
+        "price": "_source_price",
+        "currency": "_source_currency",
+        "seller": "_source_store",
+        "image": "_product_image",
+        "sku": "model",
+        "category": "category",
+    },
 }
 
 

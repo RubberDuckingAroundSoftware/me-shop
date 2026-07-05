@@ -12,7 +12,7 @@ from config import LLMConfig, get_llm_config
 def get_litellm_model_string(config: LLMConfig) -> str:
     """Map a meShop config to a litellm model string."""
     if config.provider == "ollama":
-        # e.g. "ollama/llama3.2"
+        # e.g. "ollama/gemma3:4b"
         return f"ollama/{config.model}"
     # Cloud: the model already carries its provider prefix,
     # e.g. "anthropic/claude-3-haiku" or "gpt-4o".

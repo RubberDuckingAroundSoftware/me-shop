@@ -83,7 +83,9 @@ export function updateUserPassword(id: string, passwordHash: string): boolean {
 
 export function listProjects(userId: string): Project[] {
   return getDb()
-    .prepare('SELECT * FROM projects WHERE user_id = ? ORDER BY updated_at DESC')
+    .prepare(
+      'SELECT * FROM projects WHERE user_id = ? ORDER BY sort_order ASC, created_at DESC'
+    )
     .all(userId)
     .map(rowToProject);
 }
@@ -119,11 +121,41 @@ export function createProject(input: {
   return project;
 }
 
+export function updateProject(
+  id: string,
+  userId: string,
+  patch: { name?: string }
+): Project | null {
+  const existing = getProject(id, userId);
+  if (!existing) return null;
+  const name = patch.name?.trim();
+  if (!name) return existing; // ignore empty renames
+  const now = nowIso();
+  getDb()
+    .prepare(
+      'UPDATE projects SET name = ?, updated_at = ? WHERE id = ? AND user_id = ?'
+    )
+    .run(name, now, id, userId);
+  return { ...existing, name, updatedAt: now };
+}
+
 export function deleteProject(id: string, userId: string): boolean {
   const info = getDb()
     .prepare('DELETE FROM projects WHERE id = ? AND user_id = ?')
     .run(id, userId);
   return info.changes > 0;
+}
+
+/** Persist a manual ordering: sort_order = index, scoped to the user. */
+export function reorderProjects(userId: string, projectIds: string[]): void {
+  const db = getDb();
+  const update = db.prepare(
+    'UPDATE projects SET sort_order = ? WHERE id = ? AND user_id = ?'
+  );
+  const tx = db.transaction((ids: string[]) => {
+    ids.forEach((id, index) => update.run(index, id, userId));
+  });
+  tx(projectIds);
 }
 
 function touchProject(id: string): void {
@@ -459,7 +491,7 @@ export function getLlmConfig(userId: string): LLMConfig {
     provider: (process.env.LLM_PROVIDER as LLMConfig['provider']) || 'ollama',
     baseURL: process.env.LLM_BASE_URL || 'http://localhost:11434/v1',
     apiKey: process.env.LLM_API_KEY || 'ollama',
-    model: process.env.LLM_MODEL || 'llama3.2',
+    model: process.env.LLM_MODEL || 'gemma3:4b',
   };
 }
 

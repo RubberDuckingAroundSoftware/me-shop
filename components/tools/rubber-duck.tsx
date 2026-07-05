@@ -120,11 +120,14 @@ export function RubberDuck({ project }: ToolProps) {
         if (done) break;
         buffer += decoder.decode(value, { stream: true });
 
-        // Parse complete SSE events (separated by blank lines).
-        const events = buffer.split('\n\n');
+        // Parse complete SSE events (separated by a blank line). The agent
+        // service frames events with CRLF (`\r\n\r\n`), so tolerate both.
+        const events = buffer.split(/\r?\n\r?\n/);
         buffer = events.pop() ?? '';
         for (const evt of events) {
-          const line = evt.split('\n').find((l) => l.startsWith('data:'));
+          const line = evt
+            .split(/\r?\n/)
+            .find((l) => l.startsWith('data:'));
           if (!line) continue;
           const json = line.slice(5).trim();
           if (!json) continue;

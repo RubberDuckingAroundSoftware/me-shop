@@ -124,7 +124,7 @@ export function SettingsForm({ initial }: { initial: LLMConfig }) {
                       onChange={(e) => setModel(e.target.value)}
                       placeholder={
                         provider === 'ollama'
-                          ? 'llama3.2'
+                          ? 'gemma3:4b'
                           : 'anthropic/claude-3-haiku'
                       }
                     />

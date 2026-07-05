@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS projects (
   name         TEXT NOT NULL,
   scenario_id  TEXT NOT NULL,
   metadata     TEXT NOT NULL DEFAULT '{}',   -- JSON
+  sort_order   INTEGER NOT NULL DEFAULT 0,   -- manual homepage ordering
   created_at   TEXT NOT NULL,
   updated_at   TEXT NOT NULL
 );
@@ -82,5 +83,5 @@ CREATE TABLE IF NOT EXISTS llm_config (
   provider  TEXT NOT NULL DEFAULT 'ollama',
   base_url  TEXT NOT NULL DEFAULT 'http://localhost:11434/v1',
   api_key   TEXT,
-  model     TEXT NOT NULL DEFAULT 'llama3.2'
+  model     TEXT NOT NULL DEFAULT 'gemma3:4b'
 );

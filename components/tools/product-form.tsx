@@ -18,7 +18,9 @@ const STATUSES: ProductStatus[] = ['hunting', 'found', 'bought', 'archived'];
 
 export interface ProductFormProps {
   scenarioId: ScenarioId;
-  initial?: Product;
+  // Partial so pre-filled data (e.g. from URL extraction) can seed the form
+  // without constructing a full Product.
+  initial?: Partial<Product>;
   onSubmit: (data: {
     name: string;
     description?: string;
@@ -27,6 +29,8 @@ export interface ProductFormProps {
     status: ProductStatus;
   }) => Promise<void> | void;
   onCancel: () => void;
+  /** Label for the submit button. Defaults based on create vs. edit. */
+  submitLabel?: string;
 }
 
 export function ProductForm({
@@ -34,6 +38,7 @@ export function ProductForm({
   initial,
   onSubmit,
   onCancel,
+  submitLabel,
 }: ProductFormProps) {
   const scenario = getScenario(scenarioId);
   const schema = scenario?.productSchema ?? [];
@@ -241,7 +246,9 @@ export function ProductForm({
           Cancel
         </Button>
         <Button onClick={submit} disabled={!name.trim() || submitting}>
-          {submitting ? 'Saving…' : initial ? 'Save changes' : 'Add product'}
+          {submitting
+            ? 'Saving…'
+            : submitLabel ?? (initial ? 'Save changes' : 'Add product')}
         </Button>
       </div>
     </div>
