@@ -6,7 +6,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { ToolSidebar } from '@/components/tools/tool-sidebar';
-import { getToolMeta } from '@/components/tools/tool-registry';
+import {
+  getToolMeta,
+  getToolName,
+  getToolIcon,
+} from '@/components/tools/tool-registry';
 import { PlaceholderTool } from '@/components/tools/placeholder-tool';
 import { RubberDuck } from '@/components/tools/rubber-duck';
 import { ReverseCatalog } from '@/components/tools/reverse-catalog';
@@ -29,6 +33,15 @@ export function ProjectWorkspace({
 }: ProjectWorkspaceProps) {
   const scenario = getScenario(project.scenarioId);
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+  const [focusProductId, setFocusProductId] = useState<string | null>(null);
+  const [focusNonce, setFocusNonce] = useState(0);
+
+  // From a chat product chip: switch to the catalog and focus the product.
+  const navigateToProduct = (productId: string) => {
+    setActiveToolId('reverse-catalog');
+    setFocusProductId(productId);
+    setFocusNonce((n) => n + 1);
+  };
 
   const activeMeta = activeToolId ? getToolMeta(activeToolId) : null;
   const color = scenario?.color ?? '#6B6B63';
@@ -45,9 +58,20 @@ export function ProjectWorkspace({
 
     switch (activeToolId) {
       case 'rubber-duck':
-        return <RubberDuck project={project} />;
+        return (
+          <RubberDuck
+            project={project}
+            onNavigateToProduct={navigateToProduct}
+          />
+        );
       case 'reverse-catalog':
-        return <ReverseCatalog project={project} />;
+        return (
+          <ReverseCatalog
+            project={project}
+            focusProductId={focusProductId}
+            focusNonce={focusNonce}
+          />
+        );
       case 'recipe-builder':
         return <RecipeBuilder project={project} />;
       default:
@@ -107,11 +131,14 @@ export function ProjectWorkspace({
                   className="flex items-start gap-3 rounded-lg border border-border bg-surface p-3 text-left transition-colors hover:bg-surface-hover"
                 >
                   <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-surface-hover text-text-secondary">
-                    <Icon name={meta.icon} className="h-4 w-4" />
+                    <Icon
+                      name={getToolIcon(id, project.scenarioId)}
+                      className="h-4 w-4"
+                    />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 text-sm font-medium text-text-primary">
-                      {meta.name}
+                      {getToolName(id, project.scenarioId)}
                       {!meta.functional && (
                         <Badge className="bg-accent-light text-accent">
                           Soon
@@ -208,6 +235,7 @@ export function ProjectWorkspace({
       <div className="flex min-h-0 flex-1 flex-col md:flex-row">
         <ToolSidebar
           toolIds={scenario?.tools ?? []}
+          scenarioId={project.scenarioId}
           activeToolId={activeToolId}
           onSelect={setActiveToolId}
           onOverview={() => setActiveToolId(null)}

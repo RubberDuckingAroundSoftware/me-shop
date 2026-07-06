@@ -11,6 +11,7 @@ class Message(BaseModel):
 
 
 class ProductContext(BaseModel):
+    id: str = ""
     name: str
     status: str = "hunting"
     metadata: dict = Field(default_factory=dict)
@@ -58,3 +59,16 @@ class ExtractResponse(BaseModel):
     extraction_method: str  # "structured_data" | "structured_data+llm" | "llm_only"
     raw_extracted: dict  # raw extraction before mapping, for transparency
     source_url: str
+
+
+class ExtractRecipeRequest(BaseModel):
+    source: str  # "url" | "text" | "file"
+    url: str | None = None  # when source == "url"
+    text: str | None = None  # when source == "text" or "file" (pre-extracted text)
+
+
+class ExtractRecipeResponse(BaseModel):
+    recipe: dict
+    extraction_method: str  # "structured_data" | "structured_data+llm" | "llm_only"
+    raw_extracted: dict  # raw extraction before mapping, for transparency
+    source_url: str  # empty for text/file sources

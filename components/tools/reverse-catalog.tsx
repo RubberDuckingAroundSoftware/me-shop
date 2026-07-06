@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   ChevronDown,
   ChevronRight,
@@ -22,7 +22,18 @@ import { cn, formatPrice } from '@/lib/utils';
 import type { Product } from '@/lib/types';
 import type { ToolProps } from './tool-registry';
 
-export function ReverseCatalog({ project }: ToolProps) {
+export interface ReverseCatalogProps extends ToolProps {
+  /** Product to scroll to and highlight (set when arriving from a chat chip). */
+  focusProductId?: string | null;
+  /** Bumps on each navigation request so repeat clicks re-trigger the focus. */
+  focusNonce?: number;
+}
+
+export function ReverseCatalog({
+  project,
+  focusProductId,
+  focusNonce,
+}: ReverseCatalogProps) {
   const scenario = getScenario(project.scenarioId);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,6 +54,26 @@ export function ReverseCatalog({ project }: ToolProps) {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.id]);
+
+  // When navigated here from a chat product chip, expand, scroll to, and
+  // briefly highlight the referenced product once it's in the DOM.
+  const handledFocus = useRef<number | undefined>(undefined);
+  useEffect(() => {
+    if (loading || focusNonce === undefined) return;
+    if (handledFocus.current === focusNonce) return;
+    if (!focusProductId) return;
+    if (!products.some((p) => p.id === focusProductId)) return;
+    handledFocus.current = focusNonce;
+
+    setExpanded(focusProductId);
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`product-${focusProductId}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.classList.add('ring-2', 'ring-accent');
+      setTimeout(() => el.classList.remove('ring-2', 'ring-accent'), 2000);
+    });
+  }, [focusProductId, focusNonce, loading, products]);
 
   const openCreate = () => {
     setEditing(null);
@@ -187,7 +218,10 @@ function ProductRow({
   onDelete: () => void;
 }) {
   return (
-    <div className="rounded-xl border border-border bg-surface shadow-sm">
+    <div
+      id={`product-${product.id}`}
+      className="scroll-mt-6 rounded-xl border border-border bg-surface shadow-sm transition-shadow"
+    >
       <button
         onClick={onToggle}
         className="flex w-full items-center gap-3 p-4 text-left"

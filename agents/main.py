@@ -24,10 +24,13 @@ from sse_starlette.sse import EventSourceResponse
 from agents.rubber_duck_agent import build_system_prompt
 from config import get_llm_config
 from graphs.product_extractor import extractor_graph
+from graphs.recipe_extractor import recipe_extractor_graph
 from graphs.rubber_duck import build_rubber_duck_graph
 from llm import create_chat_model, get_litellm_model_string
 from models import (
     ChatRequest,
+    ExtractRecipeRequest,
+    ExtractRecipeResponse,
     ExtractRequest,
     ExtractResponse,
     HealthResponse,
@@ -167,6 +170,35 @@ async def extract_product(request: ExtractRequest) -> ExtractResponse:
         extraction_method=result.get("extraction_method", "structured_data"),
         raw_extracted=result.get("extracted", {}),
         source_url=result.get("final_url", request.url),
+    )
+
+
+@app.post("/extract-recipe", response_model=ExtractRecipeResponse)
+async def extract_recipe(request: ExtractRecipeRequest) -> ExtractRecipeResponse:
+    # For URL sources, validate the URL format up front (400 for malformed input).
+    if request.source == "url":
+        parsed = urlparse(request.url or "")
+        if parsed.scheme not in ("http", "https") or not parsed.netloc:
+            raise HTTPException(status_code=400, detail="Invalid URL")
+
+    # Invoke the Recipe Extractor graph — all orchestration lives in the graph.
+    result = await recipe_extractor_graph.ainvoke(
+        {
+            "source": request.source,
+            "url": request.url,
+            "text": request.text,
+        }
+    )
+
+    # Fetch/processing errors surface as 422 (unreachable, too large, blocked, ...).
+    if result.get("error"):
+        raise HTTPException(status_code=422, detail=result["error"])
+
+    return ExtractRecipeResponse(
+        recipe=result["recipe"],
+        extraction_method=result.get("extraction_method", "structured_data"),
+        raw_extracted=result.get("extracted", {}),
+        source_url=result.get("final_url", ""),
     )
 
 
