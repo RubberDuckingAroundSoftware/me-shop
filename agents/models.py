@@ -11,6 +11,7 @@ class Message(BaseModel):
 
 
 class ProductContext(BaseModel):
+    id: str = ""
     name: str
     status: str = "hunting"
     metadata: dict = Field(default_factory=dict)

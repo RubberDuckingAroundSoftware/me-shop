@@ -9,6 +9,7 @@ export interface ProjectContext {
   scenario_id: string;
   scenario_description: string;
   products: {
+    id: string;
     name: string;
     status: string;
     metadata: Record<string, unknown>;
@@ -34,6 +35,7 @@ export function buildProjectContext(
     scenario_id: project.scenarioId,
     scenario_description: scenario?.description ?? '',
     products: products.map((p) => ({
+      id: p.id,
       name: p.name,
       status: p.status,
       metadata: p.metadata,
