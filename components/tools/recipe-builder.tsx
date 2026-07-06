@@ -8,9 +8,11 @@ import {
   Download,
   FileText,
   Link2,
+  Pencil,
   Plus,
   Trash2,
   UtensilsCrossed,
+  ListChecks,
   Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -25,10 +27,13 @@ import { ImportRecipeDialog, type ImportMode } from './import-recipe-dialog';
 
 export function RecipeBuilder({ project }: ToolProps) {
   const labels = getLabels(project.scenarioId);
+  const EmptyIcon =
+    project.scenarioId === 'general' ? ListChecks : UtensilsCrossed;
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [editing, setEditing] = useState<Recipe | null>(null);
   const [importMode, setImportMode] = useState<ImportMode | null>(null);
 
   const load = async () => {
@@ -68,21 +73,56 @@ export function RecipeBuilder({ project }: ToolProps) {
     await load();
   };
 
+  const openEdit = (recipe: Recipe) => setEditing(recipe);
+
+  // Optimistically merge the saved recipe into the list (no full refetch).
+  const handleSaved = (saved?: Recipe) => {
+    if (saved) {
+      setRecipes((rs) => rs.map((r) => (r.id === saved.id ? saved : r)));
+    }
+    setEditing(null);
+  };
+
   if (loading) {
     return (
       <p className="py-12 text-center text-sm text-text-tertiary">Loading…</p>
     );
   }
 
+  const editDialog = (
+    <Dialog
+      open={editing !== null}
+      onClose={() => setEditing(null)}
+      title={`Edit ${labels.noun}`}
+      variant="slideover"
+    >
+      {editing && (
+        <RecipeForm
+          projectId={project.id}
+          labels={labels}
+          recipeId={editing.id}
+          initial={editing}
+          submitLabel="Save Changes"
+          onCancel={() => setEditing(null)}
+          onCreated={handleSaved}
+        />
+      )}
+    </Dialog>
+  );
+
   if (selected) {
     return (
-      <RecipeDetail
-        recipe={selected}
-        labels={labels}
-        onBack={() => setSelectedId(null)}
-        onToggle={(i) => toggleIngredient(selected, i)}
-        onDelete={() => deleteRecipe(selected.id)}
-      />
+      <>
+        <RecipeDetail
+          recipe={selected}
+          labels={labels}
+          onBack={() => setSelectedId(null)}
+          onToggle={(i) => toggleIngredient(selected, i)}
+          onEdit={() => openEdit(selected)}
+          onDelete={() => deleteRecipe(selected.id)}
+        />
+        {editDialog}
+      </>
     );
   }
 
@@ -139,7 +179,7 @@ export function RecipeBuilder({ project }: ToolProps) {
 
       {recipes.length === 0 ? (
         <EmptyState
-          icon={UtensilsCrossed}
+          icon={EmptyIcon}
           title={labels.emptyTitle}
           description={labels.emptyDescription}
           action={
@@ -154,31 +194,42 @@ export function RecipeBuilder({ project }: ToolProps) {
           {recipes.map((r) => {
             const found = r.ingredients.filter((i) => i.found).length;
             return (
-              <button
+              <div
                 key={r.id}
-                onClick={() => setSelectedId(r.id)}
-                className="flex w-full items-center justify-between rounded-xl border border-border bg-surface p-4 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
+                className="group flex w-full items-center gap-3 rounded-xl border border-border bg-surface p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className="min-w-0">
-                  <div className="font-medium text-text-primary">{r.name}</div>
-                  {r.description && (
-                    <div className="truncate text-xs text-text-secondary">
-                      {r.description}
+                <button
+                  onClick={() => setSelectedId(r.id)}
+                  className="flex min-w-0 flex-1 items-center justify-between gap-3 text-left"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium text-text-primary">{r.name}</div>
+                    {r.description && (
+                      <div className="truncate text-xs text-text-secondary">
+                        {r.description}
+                      </div>
+                    )}
+                  </div>
+                  <div className="shrink-0 text-right text-xs text-text-tertiary">
+                    <div>
+                      {r.ingredients.length}{' '}
+                      {r.ingredients.length === 1
+                        ? labels.itemNoun
+                        : labels.itemNounPlural}
                     </div>
-                  )}
-                </div>
-                <div className="shrink-0 text-right text-xs text-text-tertiary">
-                  <div>
-                    {r.ingredients.length}{' '}
-                    {r.ingredients.length === 1
-                      ? labels.itemNoun
-                      : labels.itemNounPlural}
+                    <div className="text-accent">
+                      {found}/{r.ingredients.length} sourced
+                    </div>
                   </div>
-                  <div className="text-accent">
-                    {found}/{r.ingredients.length} sourced
-                  </div>
-                </div>
-              </button>
+                </button>
+                <button
+                  onClick={() => openEdit(r)}
+                  aria-label={`Edit ${labels.noun}`}
+                  className="shrink-0 rounded-lg p-2 text-text-tertiary opacity-0 transition-opacity hover:bg-surface-hover hover:text-text-primary focus:opacity-100 group-hover:opacity-100"
+                >
+                  <Pencil className="h-4 w-4" />
+                </button>
+              </div>
             );
           })}
         </div>
@@ -201,6 +252,8 @@ export function RecipeBuilder({ project }: ToolProps) {
         />
       </Dialog>
 
+      {editDialog}
+
       <ImportRecipeDialog
         open={importMode !== null}
         initialMode={importMode ?? 'url'}
@@ -218,12 +271,14 @@ function RecipeDetail({
   labels,
   onBack,
   onToggle,
+  onEdit,
   onDelete,
 }: {
   recipe: Recipe;
   labels: BuilderLabels;
   onBack: () => void;
   onToggle: (index: number) => void;
+  onEdit: () => void;
   onDelete: () => void;
 }) {
   const found = recipe.ingredients.filter((i) => i.found).length;
@@ -235,10 +290,16 @@ function RecipeDetail({
           <ChevronLeft className="h-4 w-4" />
           Back to {labels.nounPlural}
         </Button>
-        <Button variant="danger" size="sm" onClick={onDelete}>
-          <Trash2 className="h-3.5 w-3.5" />
-          Delete
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="secondary" size="sm" onClick={onEdit}>
+            <Pencil className="h-3.5 w-3.5" />
+            Edit
+          </Button>
+          <Button variant="danger" size="sm" onClick={onDelete}>
+            <Trash2 className="h-3.5 w-3.5" />
+            Delete
+          </Button>
+        </div>
       </div>
 
       <h2 className="text-2xl font-semibold text-text-primary">

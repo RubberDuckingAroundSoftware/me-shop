@@ -2,10 +2,12 @@
 
 import { Icon } from '@/components/ui/icon';
 import { cn } from '@/lib/utils';
-import { getToolMeta } from './tool-registry';
+import { getToolMeta, getToolName, getToolIcon } from './tool-registry';
 
 export interface ToolSidebarProps {
   toolIds: string[];
+  /** Scenario the project belongs to; drives scenario-specific tool names. */
+  scenarioId: string;
   activeToolId: string | null;
   onSelect: (id: string | null) => void;
   /** Label for the "overview" (no tool selected) entry. */
@@ -15,6 +17,7 @@ export interface ToolSidebarProps {
 
 export function ToolSidebar({
   toolIds,
+  scenarioId,
   activeToolId,
   onSelect,
   onOverview,
@@ -58,8 +61,8 @@ export function ToolSidebar({
                 : 'text-text-secondary hover:bg-surface-hover hover:text-text-primary'
             )}
           >
-            <Icon name={meta.icon} className="h-4 w-4 shrink-0" />
-            <span className="truncate">{meta.name}</span>
+            <Icon name={getToolIcon(id, scenarioId)} className="h-4 w-4 shrink-0" />
+            <span className="truncate">{getToolName(id, scenarioId)}</span>
             {!meta.functional && (
               <span className="text-[10px] text-text-tertiary md:ml-auto">
                 soon

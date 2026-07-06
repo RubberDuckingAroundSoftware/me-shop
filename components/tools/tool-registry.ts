@@ -1,4 +1,5 @@
 import type { Project } from '@/lib/types';
+import { getLabels } from './recipe-form';
 
 /** Props every tool component receives. */
 export interface ToolProps {
@@ -66,4 +67,28 @@ export const toolMeta: Record<string, ToolMeta> = {
 
 export function getToolMeta(id: string): ToolMeta | undefined {
   return toolMeta[id];
+}
+
+/**
+ * Display name for a tool within a given scenario. Most tools have a fixed
+ * name, but the Recipe Builder is a generic "List Builder" outside cooking
+ * scenarios — mirror the same scenario vocabulary the tool itself uses.
+ */
+export function getToolName(id: string, scenarioId: string): string {
+  const meta = toolMeta[id];
+  if (!meta) return '';
+  if (id === 'recipe-builder') return getLabels(scenarioId).toolName;
+  return meta.name;
+}
+
+/**
+ * Lucide icon name for a tool within a given scenario. Mirrors getToolName:
+ * the Recipe Builder's utensils icon only fits cooking scenarios, so the
+ * generic "List Builder" gets a checklist icon instead.
+ */
+export function getToolIcon(id: string, scenarioId: string): string {
+  const meta = toolMeta[id];
+  if (!meta) return '';
+  if (id === 'recipe-builder' && scenarioId === 'general') return 'ListChecks';
+  return meta.icon;
 }

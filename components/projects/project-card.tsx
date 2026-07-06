@@ -136,15 +136,9 @@ export function ProjectCard({
           className="relative z-10 mt-4 w-full rounded-md border border-border bg-surface px-2 py-1 text-lg font-semibold text-text-primary focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
         />
       ) : (
-        <h3
-          onDoubleClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            startEdit();
-          }}
-          className="relative z-10 mt-4 w-fit cursor-text text-lg font-semibold text-text-primary group-hover:text-accent"
-          title="Double-click to rename"
-        >
+        // No z-index: sits below the stretched navigation link so clicking the
+        // title opens the project. Renaming is available via the ⋯ menu.
+        <h3 className="mt-4 w-fit text-lg font-semibold text-text-primary group-hover:text-accent">
           {project.name}
         </h3>
       )}

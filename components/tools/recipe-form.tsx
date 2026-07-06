@@ -5,7 +5,7 @@ import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import type { RecipeIngredient } from '@/lib/types';
+import type { Recipe, RecipeIngredient } from '@/lib/types';
 
 /**
  * Shared vocabulary for the Recipe Builder, which doubles as a generic "List
@@ -91,6 +91,7 @@ export function RecipeForm({
   projectId,
   labels,
   initial,
+  recipeId,
   submitLabel,
   onCancel,
   onCreated,
@@ -98,10 +99,14 @@ export function RecipeForm({
   projectId: string;
   labels: BuilderLabels;
   initial?: RecipeFormInitial;
+  /** When provided, the form edits this recipe (PUT) instead of creating one (POST). */
+  recipeId?: string;
   submitLabel?: string;
   onCancel: () => void;
-  onCreated: () => void;
+  /** Called after a successful save. Receives the saved recipe (edit mode). */
+  onCreated: (saved?: Recipe) => void;
 }) {
+  const isEdit = recipeId != null;
   const [name, setName] = useState(initial?.name ?? '');
   const [description, setDescription] = useState(initial?.description ?? '');
   const [servings, setServings] = useState(
@@ -117,6 +122,7 @@ export function RecipeForm({
   );
   const [notes, setNotes] = useState(initial?.notes ?? '');
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const updateIng = (i: number, patch: Partial<RecipeIngredient>) =>
     setIngredients((list) =>
@@ -129,6 +135,7 @@ export function RecipeForm({
   const submit = async () => {
     if (!name.trim()) return;
     setSubmitting(true);
+    setError(null);
     const payload = {
       projectId,
       name: name.trim(),
@@ -145,13 +152,27 @@ export function RecipeForm({
         .filter(Boolean),
       notes: notes.trim() || undefined,
     };
-    const res = await fetch('/api/recipes', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-    setSubmitting(false);
-    if (res.ok) onCreated();
+    try {
+      const res = await fetch(
+        isEdit ? `/api/recipes/${recipeId}` : '/api/recipes',
+        {
+          method: isEdit ? 'PUT' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data?.error || `Couldn't save. Please try again.`);
+        return;
+      }
+      const { recipe } = await res.json().catch(() => ({ recipe: undefined }));
+      onCreated(recipe);
+    } catch {
+      setError(`Couldn't reach the server. Please try again.`);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -272,12 +293,20 @@ export function RecipeForm({
         />
       </div>
 
+      {error && (
+        <p className="text-sm text-danger" role="alert">
+          {error}
+        </p>
+      )}
+
       <div className="flex justify-end gap-2 border-t border-border pt-4">
         <Button variant="secondary" onClick={onCancel} disabled={submitting}>
           Cancel
         </Button>
         <Button onClick={submit} disabled={!name.trim() || submitting}>
-          {submitting ? 'Saving…' : submitLabel ?? labels.addButton}
+          {submitting
+            ? 'Saving…'
+            : submitLabel ?? (isEdit ? 'Save Changes' : labels.addButton)}
         </Button>
       </div>
     </div>
