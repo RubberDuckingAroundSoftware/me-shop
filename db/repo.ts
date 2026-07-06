@@ -235,11 +235,18 @@ export function updateProduct(
   const existing = getProduct(id, userId);
   if (!existing) return null;
 
-  const updated: Product = {
+  // Partial update: only overwrite fields actually present in the patch.
+  // A field left `undefined` keeps its existing value (guards the NOT NULL
+  // JSON columns against being clobbered with undefined on partial PUTs).
+  const merged: Product = {
     ...existing,
-    ...patch,
-    updatedAt: nowIso(),
+    name: patch.name ?? existing.name,
+    description: patch.description ?? existing.description,
+    metadata: patch.metadata ?? existing.metadata,
+    sources: patch.sources ?? existing.sources,
+    status: patch.status ?? existing.status,
   };
+  const updated: Product = { ...merged, updatedAt: nowIso() };
   getDb()
     .prepare(
       `UPDATE products
@@ -424,7 +431,21 @@ export function updateRecipe(
 ): Recipe | null {
   const existing = getRecipe(id, userId);
   if (!existing) return null;
-  const updated: Recipe = { ...existing, ...patch, updatedAt: nowIso() };
+  // Partial update: only overwrite fields actually present in the patch.
+  // A field left `undefined` keeps its existing value (guards the NOT NULL
+  // JSON columns against being clobbered with undefined on partial PUTs).
+  const merged: Recipe = {
+    ...existing,
+    name: patch.name ?? existing.name,
+    description: patch.description ?? existing.description,
+    servings: patch.servings ?? existing.servings,
+    prepTime: patch.prepTime ?? existing.prepTime,
+    cookTime: patch.cookTime ?? existing.cookTime,
+    ingredients: patch.ingredients ?? existing.ingredients,
+    instructions: patch.instructions ?? existing.instructions,
+    notes: patch.notes ?? existing.notes,
+  };
+  const updated: Recipe = { ...merged, updatedAt: nowIso() };
   getDb()
     .prepare(
       `UPDATE recipes
