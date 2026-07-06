@@ -4,18 +4,25 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { MessageCircle, Send, Plus, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn, formatTime, nowIso } from '@/lib/utils';
-import type { ChatMessage, Conversation } from '@/lib/types';
+import { nowIso } from '@/lib/utils';
+import type { ChatMessage, Conversation, Product } from '@/lib/types';
 import type { ToolProps } from './tool-registry';
+import { ChatMessage as ChatMessageBubble } from './chat-message';
 
 interface ChatError {
   code: string;
   message: string;
 }
 
-export function RubberDuck({ project }: ToolProps) {
+export interface RubberDuckProps extends ToolProps {
+  /** Navigate to a product in the Reverse Catalog (tool switch + scroll). */
+  onNavigateToProduct?: (productId: string) => void;
+}
+
+export function RubberDuck({ project, onNavigateToProduct }: RubberDuckProps) {
   const [conversation, setConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [input, setInput] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [streamText, setStreamText] = useState('');
@@ -43,8 +50,16 @@ export function RubberDuck({ project }: ToolProps) {
     setLoading(false);
   };
 
+  // Load the catalog so product mentions can be linked to real entries.
+  const loadProducts = async () => {
+    const res = await fetch(`/api/products?projectId=${project.id}`);
+    const { products } = await res.json();
+    setProducts(products);
+  };
+
   useEffect(() => {
     initConversation();
+    loadProducts();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [project.id]);
 
@@ -207,16 +222,25 @@ export function RubberDuck({ project }: ToolProps) {
               </p>
             </div>
           ) : (
-            messages.map((m, i) => <Bubble key={i} message={m} />)
+            messages.map((m, i) => (
+              <ChatMessageBubble
+                key={i}
+                message={m}
+                products={products}
+                onProductClick={onNavigateToProduct}
+              />
+            ))
           )}
 
           {streaming && (
-            <Bubble
+            <ChatMessageBubble
               message={{
                 role: 'assistant',
                 content: streamText,
                 timestamp: nowIso(),
               }}
+              products={products}
+              onProductClick={onNavigateToProduct}
               pending={streamText.length === 0}
             />
           )}
@@ -249,44 +273,6 @@ export function RubberDuck({ project }: ToolProps) {
             <Send className="h-4 w-4" />
           </Button>
         </div>
-      </div>
-    </div>
-  );
-}
-
-function Bubble({
-  message,
-  pending,
-}: {
-  message: ChatMessage;
-  pending?: boolean;
-}) {
-  const isUser = message.role === 'user';
-  return (
-    <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
-      <div
-        className={cn(
-          'max-w-[85%] rounded-xl px-4 py-2.5 text-sm',
-          isUser
-            ? 'bg-accent text-white'
-            : 'border border-border bg-surface text-text-primary'
-        )}
-      >
-        {pending ? (
-          <span className="flex gap-1 py-1">
-            <span className="h-1.5 w-1.5 animate-dot rounded-full bg-text-tertiary" />
-            <span
-              className="h-1.5 w-1.5 animate-dot rounded-full bg-text-tertiary"
-              style={{ animationDelay: '0.15s' }}
-            />
-            <span
-              className="h-1.5 w-1.5 animate-dot rounded-full bg-text-tertiary"
-              style={{ animationDelay: '0.3s' }}
-            />
-          </span>
-        ) : (
-          <p className="whitespace-pre-wrap">{message.content}</p>
-        )}
       </div>
     </div>
   );

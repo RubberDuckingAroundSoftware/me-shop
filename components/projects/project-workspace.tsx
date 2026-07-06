@@ -33,6 +33,15 @@ export function ProjectWorkspace({
 }: ProjectWorkspaceProps) {
   const scenario = getScenario(project.scenarioId);
   const [activeToolId, setActiveToolId] = useState<string | null>(null);
+  const [focusProductId, setFocusProductId] = useState<string | null>(null);
+  const [focusNonce, setFocusNonce] = useState(0);
+
+  // From a chat product chip: switch to the catalog and focus the product.
+  const navigateToProduct = (productId: string) => {
+    setActiveToolId('reverse-catalog');
+    setFocusProductId(productId);
+    setFocusNonce((n) => n + 1);
+  };
 
   const activeMeta = activeToolId ? getToolMeta(activeToolId) : null;
   const color = scenario?.color ?? '#6B6B63';
@@ -49,9 +58,20 @@ export function ProjectWorkspace({
 
     switch (activeToolId) {
       case 'rubber-duck':
-        return <RubberDuck project={project} />;
+        return (
+          <RubberDuck
+            project={project}
+            onNavigateToProduct={navigateToProduct}
+          />
+        );
       case 'reverse-catalog':
-        return <ReverseCatalog project={project} />;
+        return (
+          <ReverseCatalog
+            project={project}
+            focusProductId={focusProductId}
+            focusNonce={focusNonce}
+          />
+        );
       case 'recipe-builder':
         return <RecipeBuilder project={project} />;
       default:
