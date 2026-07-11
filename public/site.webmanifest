@@ -1,0 +1,11 @@
+{
+  "name": "meShop",
+  "short_name": "meShop",
+  "icons": [
+    { "src": "/favicon-32x32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ],
+  "theme_color": "#2C5F2D",
+  "background_color": "#FAFAF8",
+  "display": "standalone"
+}
