@@ -1,26 +1,20 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import {
-  ChevronDown,
-  ChevronRight,
-  ExternalLink,
-  Library,
-  Link2,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react';
+import { Library, Link2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { StatusBadge } from '@/components/ui/badge';
 import { ResizableDrawer } from '@/components/ui/resizable-drawer';
 import { EmptyState } from '@/components/ui/empty-state';
 import { ProductForm } from './product-form';
 import { ImportUrlDialog } from './import-url-dialog';
+import { ViewToggle, type CatalogView } from './view-toggle';
+import { CatalogListView } from './catalog-list-view';
+import { CatalogBoardView } from './catalog-board-view';
 import { getScenario } from '@/lib/scenarios';
-import { cn, formatPrice } from '@/lib/utils';
-import type { Product } from '@/lib/types';
+import type { Product, ProductStatus } from '@/lib/types';
 import type { ToolProps } from './tool-registry';
+
+const VIEW_STORAGE_KEY = 'meshop_catalog_view';
 
 export interface ReverseCatalogProps extends ToolProps {
   /** Product to scroll to and highlight (set when arriving from a chat chip). */
@@ -35,12 +29,24 @@ export function ReverseCatalog({
   focusNonce,
 }: ReverseCatalogProps) {
   const scenario = getScenario(project.scenarioId);
+  const scenarioSchema = scenario?.productSchema ?? [];
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expanded, setExpanded] = useState<string | null>(null);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Product | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+
+  const [view, setView] = useState<CatalogView>('list');
+  // Read the persisted view after mount to keep SSR/first paint deterministic.
+  useEffect(() => {
+    const saved = localStorage.getItem(VIEW_STORAGE_KEY) as CatalogView | null;
+    if (saved === 'list' || saved === 'board') setView(saved);
+  }, []);
+  const switchView = (v: CatalogView) => {
+    setView(v);
+    localStorage.setItem(VIEW_STORAGE_KEY, v);
+  };
 
   const load = async () => {
     setLoading(true);
@@ -65,7 +71,7 @@ export function ReverseCatalog({
     if (!products.some((p) => p.id === focusProductId)) return;
     handledFocus.current = focusNonce;
 
-    setExpanded(focusProductId);
+    setExpandedId(focusProductId);
     requestAnimationFrame(() => {
       const el = document.getElementById(`product-${focusProductId}`);
       if (!el) return;
@@ -83,10 +89,12 @@ export function ReverseCatalog({
     setEditing(p);
     setFormOpen(true);
   };
+  const toggleExpanded = (id: string) =>
+    setExpandedId((cur) => (cur === id ? null : id));
 
-  const handleSubmit = async (data: Parameters<
-    React.ComponentProps<typeof ProductForm>['onSubmit']
-  >[0]) => {
+  const handleSubmit = async (
+    data: Parameters<React.ComponentProps<typeof ProductForm>['onSubmit']>[0]
+  ) => {
     if (editing) {
       await fetch(`/api/products/${editing.id}`, {
         method: 'PUT',
@@ -107,13 +115,62 @@ export function ReverseCatalog({
 
   const handleDelete = async (id: string) => {
     if (!confirm('Delete this product?')) return;
-    await fetch(`/api/products/${id}`, { method: 'DELETE' });
-    await load();
+    setProducts((ps) => ps.filter((p) => p.id !== id)); // optimistic
+    await fetch(`/api/products/${id}`, { method: 'DELETE' }).catch(() => {});
   };
 
+  // Persist a new global ordering (shared by both views). Reorders the local
+  // array to match so list and board stay windows onto the same data.
+  const handleReorder = (orderedIds: string[]) => {
+    setProducts((ps) => {
+      const byId = new Map(ps.map((p) => [p.id, p]));
+      const next = orderedIds
+        .map((id) => byId.get(id))
+        .filter((p): p is Product => p !== undefined);
+      return next.length === ps.length ? next : ps;
+    });
+    fetch('/api/products/reorder', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId: project.id, productIds: orderedIds }),
+    }).catch(() => {});
+  };
+
+  // Persist a single product's status change (board cross-column drag / move).
+  const handleStatusChange = (id: string, status: ProductStatus) => {
+    setProducts((ps) =>
+      ps.map((p) => (p.id === id ? { ...p, status } : p))
+    );
+    fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
+    }).catch(() => {});
+  };
+
+  const actions = (
+    <div className="flex items-center gap-2">
+      <ViewToggle view={view} onChange={switchView} />
+      <Button variant="secondary" onClick={() => setImportOpen(true)}>
+        <Link2 className="h-4 w-4" />
+        Import from URL
+      </Button>
+      <Button onClick={openCreate}>
+        <Plus className="h-4 w-4" />
+        Add Product
+      </Button>
+    </div>
+  );
+
   return (
-    <div className="mx-auto max-w-3xl px-4 py-6 sm:px-8">
-      <div className="mb-5 flex items-center justify-between">
+    <div
+      className={
+        view === 'board'
+          ? 'mx-auto max-w-7xl px-4 py-6 sm:px-8'
+          : 'mx-auto max-w-3xl px-4 py-6 sm:px-8'
+      }
+    >
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 className="text-xl font-semibold text-text-primary">
             Reverse Catalog
@@ -123,16 +180,7 @@ export function ReverseCatalog({
             tracking.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="secondary" onClick={() => setImportOpen(true)}>
-            <Link2 className="h-4 w-4" />
-            Import from URL
-          </Button>
-          <Button onClick={openCreate}>
-            <Plus className="h-4 w-4" />
-            Add Product
-          </Button>
-        </div>
+        {actions}
       </div>
 
       {loading ? (
@@ -155,22 +203,28 @@ export function ReverseCatalog({
             </div>
           }
         />
+      ) : view === 'list' ? (
+        <CatalogListView
+          products={products}
+          scenarioSchema={scenarioSchema}
+          expandedId={expandedId}
+          onToggle={toggleExpanded}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+          onReorder={handleReorder}
+        />
       ) : (
-        <div className="space-y-3">
-          {products.map((p) => (
-            <ProductRow
-              key={p.id}
-              product={p}
-              scenarioSchema={scenario?.productSchema ?? []}
-              expanded={expanded === p.id}
-              onToggle={() =>
-                setExpanded((cur) => (cur === p.id ? null : p.id))
-              }
-              onEdit={() => openEdit(p)}
-              onDelete={() => handleDelete(p.id)}
-            />
-          ))}
-        </div>
+        <CatalogBoardView
+          products={products}
+          projectId={project.id}
+          scenarioSchema={scenarioSchema}
+          expandedId={expandedId}
+          onToggle={toggleExpanded}
+          onEdit={openEdit}
+          onDelete={handleDelete}
+          onReorder={handleReorder}
+          onStatusChange={handleStatusChange}
+        />
       )}
 
       <ResizableDrawer
@@ -197,128 +251,6 @@ export function ReverseCatalog({
           scenarioId={scenario.id}
           onProductCreated={load}
         />
-      )}
-    </div>
-  );
-}
-
-function ProductRow({
-  product,
-  scenarioSchema,
-  expanded,
-  onToggle,
-  onEdit,
-  onDelete,
-}: {
-  product: Product;
-  scenarioSchema: { key: string; label: string }[];
-  expanded: boolean;
-  onToggle: () => void;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  return (
-    <div
-      id={`product-${product.id}`}
-      className="scroll-mt-6 rounded-xl border border-border bg-surface shadow-sm transition-shadow"
-    >
-      <button
-        onClick={onToggle}
-        className="flex w-full items-center gap-3 p-4 text-left"
-      >
-        {expanded ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-text-tertiary" />
-        ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-text-tertiary" />
-        )}
-        <div className="min-w-0 flex-1">
-          <div className="truncate font-medium text-text-primary">
-            {product.name}
-          </div>
-          {product.description && (
-            <div className="truncate text-xs text-text-secondary">
-              {product.description}
-            </div>
-          )}
-        </div>
-        <span className="text-xs text-text-tertiary">
-          {product.sources.length}{' '}
-          {product.sources.length === 1 ? 'source' : 'sources'}
-        </span>
-        <StatusBadge status={product.status} />
-      </button>
-
-      {expanded && (
-        <div className="border-t border-border px-4 py-4">
-          {/* Scenario-specific metadata */}
-          <dl className="grid grid-cols-2 gap-x-4 gap-y-2">
-            {scenarioSchema.map((f) => {
-              const v = product.metadata?.[f.key];
-              if (v === undefined || v === null || v === '') return null;
-              return (
-                <div key={f.key} className="text-sm">
-                  <dt className="text-xs text-text-tertiary">{f.label}</dt>
-                  <dd className="text-text-primary">{String(v)}</dd>
-                </div>
-              );
-            })}
-          </dl>
-
-          {/* Sources */}
-          {product.sources.length > 0 && (
-            <div className="mt-4">
-              <div className="mb-2 text-xs font-medium uppercase tracking-wide text-text-tertiary">
-                Sources
-              </div>
-              <div className="space-y-2">
-                {product.sources.map((s, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between rounded-lg bg-surface-hover px-3 py-2 text-sm"
-                  >
-                    <div className="min-w-0">
-                      <a
-                        href={s.url || undefined}
-                        target="_blank"
-                        rel="noreferrer"
-                        className={cn(
-                          'inline-flex items-center gap-1 font-medium',
-                          s.url
-                            ? 'text-accent hover:underline'
-                            : 'text-text-primary'
-                        )}
-                      >
-                        {s.storeName || s.url}
-                        {s.url && <ExternalLink className="h-3 w-3" />}
-                      </a>
-                      {s.notes && (
-                        <div className="truncate text-xs text-text-secondary">
-                          {s.notes}
-                        </div>
-                      )}
-                    </div>
-                    {s.price !== undefined && (
-                      <span className="shrink-0 font-medium text-text-primary">
-                        {formatPrice(s.price, s.currency)}
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="mt-4 flex justify-end gap-1">
-            <Button variant="ghost" size="sm" onClick={onEdit}>
-              <Pencil className="h-3.5 w-3.5" />
-              Edit
-            </Button>
-            <Button variant="danger" size="sm" onClick={onDelete}>
-              <Trash2 className="h-3.5 w-3.5" />
-              Delete
-            </Button>
-          </div>
-        </div>
       )}
     </div>
   );
