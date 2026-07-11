@@ -169,10 +169,22 @@ function touchProject(id: string): void {
 export function listProducts(projectId: string, userId: string): Product[] {
   return getDb()
     .prepare(
-      'SELECT * FROM products WHERE project_id = ? AND user_id = ? ORDER BY created_at ASC'
+      'SELECT * FROM products WHERE project_id = ? AND user_id = ? ORDER BY sort_order ASC, created_at ASC'
     )
     .all(projectId, userId)
     .map(rowToProduct);
+}
+
+/** Persist a manual product ordering: sort_order = index, scoped to the user. */
+export function reorderProducts(userId: string, productIds: string[]): void {
+  const db = getDb();
+  const update = db.prepare(
+    'UPDATE products SET sort_order = ? WHERE id = ? AND user_id = ?'
+  );
+  const tx = db.transaction((ids: string[]) => {
+    ids.forEach((id, index) => update.run(index, id, userId));
+  });
+  tx(productIds);
 }
 
 export function getProduct(id: string, userId: string): Product | null {

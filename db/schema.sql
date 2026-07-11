@@ -38,6 +38,7 @@ CREATE TABLE IF NOT EXISTS products (
   metadata     TEXT NOT NULL DEFAULT '{}',   -- JSON: scenario-specific fields
   sources      TEXT NOT NULL DEFAULT '[]',   -- JSON: ProductSource[]
   status       TEXT NOT NULL DEFAULT 'hunting',
+  sort_order   INTEGER NOT NULL DEFAULT 0,    -- manual ordering (list + board views)
   created_at   TEXT NOT NULL,
   updated_at   TEXT NOT NULL
 );

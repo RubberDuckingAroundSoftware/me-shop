@@ -8,13 +8,17 @@ It is not a storefront. It is not a marketplace. It is not a price comparison en
 
 It is the space between *wanting something* and *finding exactly the right one*.
 
+See [`docs/what-is-meshop.md`](./docs/what-is-meshop.md) to learn more about product vision and [`agents/README.md`](agents/README.md) for agent-service details.
+
 ---
 
-## v0.0.1 — Quickstart
+## Quickstart
 
-meShop v0.0.1 is a Next.js app (frontend + API) backed by a Python agent service
+meShop is a Next.js app (frontend + API) backed by a Python agent service
 (FastAPI + LangGraph) for the AI chat companion. State lives in a single
 file-based SQLite database shared by both.
+
+Note: current version is 0.0.1, it's usable but features are limited.
 
 ### Prerequisites
 
@@ -31,14 +35,10 @@ pnpm db:seed            # seed the demo database
 pnpm dev:all            # start Next.js (:3000) + agent service (:8000)
 ```
 
-Then open http://localhost:3000 and **sign in with the demo account**:
+Then open http://localhost:3000 and **sign in with the demo account or create your own account**:
 
 - **Email:** `demo@meshop.world`
 - **Password:** `meshop`
-
-Or create your own account, a fresh account starts with an empty projects
-homepage. Each account's projects, products, conversations, and recipes are
-fully isolated from other accounts.
 
 The demo account comes pre-loaded with three sample projects:
 
@@ -69,15 +69,7 @@ If you're self-hosting and forgot your password, reset it from the terminal:
 pnpm auth:reset-password your@email.com
 ```
 
-See [`agents/README.md`](agents/README.md) for agent-service details and
-[`docs/what-is-meshop.md`](./docs/what-is-meshop.md)
-for the full build spec.
-
-### Architecture
-
-```
-Browser → Next.js /api/chat → (HTTP proxy) → Python FastAPI :8000 → LangGraph → LLM (Ollama / Cloud)
-```
+### Tech stack
 
 - **Frontend/API:** Next.js 14 (App Router), TypeScript, Tailwind
 - **Database:** better-sqlite3 (file-based, shared with Python)
